@@ -1,0 +1,79 @@
+{% extends "layouts/main.html" %}
+
+{% block header %}
+<title>片段列表</title>
+{% endblock %}
+
+{% block content %}
+
+<div class="flex-1">
+    <div class="h-full p-4 pl-0">
+        <div class="h-full w-full rounded-lg border border-gray-300 bg-white overflow-auto p-6">
+            
+            <div class="flex justify-between items-center">
+                <div class="flex items-center mb-4 text-blue-500">
+                    <i class="fa fa-book text-2xl mr-2"></i>
+                    <h1 class="text-2xl font-medium">测试知识库</h1>
+                    <div class="ml-4 bg-gray-200 rounded px-2 py-0.5 text-gray-600 text-sm">分段列表</div>
+                </div>
+                <div class="flex justify-end mb-4">
+                    <a href="{{url_for('dataset.segment_create', document_id=document.id)}}" class="flex items-center bg-blue-500 text-white px-4 py-2 text-sm rounded-lg shadow hover:bg-blue-600">
+                        <i class="fa fa-plus mr-2"></i>
+                        <span>插入分段</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 提示信息区域 -->
+            <div class="mb-6 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+                <p>当前片段所属文档为：<strong>{{document.file_name}}</strong></p>
+            </div>
+
+            {% include "widgets/flash_messages.html" %}
+
+            <div class="grid grid-cols-3 gap-6">
+                {% for item in segments %}
+                <!-- 知识库单元 -->
+                <div class="border rounded-lg p-4 flex flex-col justify-between hover:border-blue-500">
+                    <div>
+                        <div class="flex justify-between items-center mb-2 text-sm">
+                            <div class="border border-blue-300 text-blue-500 rounded px-2 py-0.5"># {{item.order}}</div>
+                            {% set status_text, status_class = item.status | document_status %}
+                            <span class="py-1 px-3 rounded-full text-xs {{ status_class }}">{{ status_text }}</span>
+
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">
+                            {{item.content[:100]}}...
+                        </p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">{{item.content | length }}个字符</span>
+                        <div class="space-x-1">
+                            <a href="{{url_for('dataset.segment_edit', segment_id=item.id)}}" class="bg-green-500 text-white px-3 py-1 text-sm rounded shadow hover:bg-green-600">编辑</a>
+                            <a href="#" data-url="{{ url_for('dataset.segment_delete', segment_id=item.id) }}" onclick="confirmDeletion(event)" class="bg-red-500 text-white px-3 py-1 text-sm rounded shadow hover:bg-red-600">删除</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block footer %}
+<script>
+    function confirmDeletion(event) {
+        const url = event.target.getAttribute('data-url');
+        if (!confirm('确定要删除这个知识库吗？')) {
+            event.preventDefault();
+        } else {
+            window.location.href = url;
+        }
+    }
+</script>
+{% endblock %}
+

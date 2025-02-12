@@ -1,0 +1,59 @@
+{% extends "layouts/main.html" %}
+
+{% block header %}
+<title>新建知识库</title>
+{% endblock %}
+
+{% block content %}
+
+<div class="flex-1">
+    <div class="h-full p-4 pl-0">
+        <div class="h-full w-full rounded-lg border border-gray-300 bg-white overflow-auto p-6">
+            
+            <div class="flex justify-between items-center">
+                <div class="flex items-center mb-4 text-blue-500">
+                    <i class="fa fa-book text-2xl mr-2"></i>
+                    <h1 class="text-2xl font-medium">新建知识库</h1>
+                </div>
+            </div>
+
+            <div class="p-6 w-full md:w-[780px]">
+
+                {% include "widgets/flash_messages.html" %}
+
+                <form action="{{url_for('dataset.dataset_create')}}" method="post">
+                    {{ form.hidden_tag() }}
+                    <div class="py-2">
+                        <div class="mb-2 text-sm font-medium">知识库名称：</div>
+                        <div class="w-full text-sm">
+                            <input type="text" name="name" value="{{request.form.name}}" class="px-4 py-2 w-full bg-gray-100 rounded" placeholder="请输入知识库名称">
+                        </div>
+                    </div>
+                    <div class="py-2">
+                        <div class="mb-2 text-sm font-medium">知识库描述：</div>
+                        <div class="w-full text-sm">
+                            <textarea name="desc" class="px-4 py-2 w-full h-[120px] bg-gray-100 rounded" placeholder="请输出这个知识库的描述">{{request.form.desc}}</textarea>
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-2 space-x-4">
+                        <a href="{{url_for('dataset.dataset_list')}}" class="text-sm bg-gray-500 text-white px-4 py-1.5 rounded-lg shadow hover:bg-gray-600">
+                            返回列表
+                        </a>
+                        <button type="submit" class="text-sm bg-blue-500 text-white px-4 py-1.5 rounded-lg shadow hover:bg-blue-600">
+                            保存信息
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+
+

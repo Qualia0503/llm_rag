@@ -1,0 +1,79 @@
+{% extends "layouts/main.html" %}
+
+{% block header %}
+<title>万店盈利文档上传</title>
+{% endblock %}
+
+{% block content %}
+
+<div class="flex-1">
+    <div class="h-full p-4 pl-0">
+        <div class="h-full w-full rounded-lg border border-gray-300 bg-white overflow-auto p-6">
+            
+            <div class="flex justify-between items-center">
+                <div class="flex items-center mb-4 text-blue-500">
+                    <i class="fa fa-book text-2xl mr-2"></i>
+                    <h1 class="text-2xl font-medium">文件上传</h1>
+                </div>
+                <div class="flex justify-end mb-4">
+                    <button class="flex items-center bg-blue-500 text-white px-4 py-2 text-sm rounded-lg shadow hover:bg-blue-600">
+                        <i class="fa fa-arrow-left mr-2"></i>
+                        <span>返回</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="w-full md:w-[780px] mt-3">
+                <!-- 提示信息区域 -->
+                <div class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+                    <p>当前文档所属知识库为：<strong>{{dataset.name}}</strong></p>
+                </div>
+
+                {% include "widgets/flash_messages.html" %}
+                
+                <!-- 上传文件表单 -->
+                <div class="mt-6">
+                    <!-- 上传文件表单 -->
+                    <form action="{{url_for('dataset.document_create', dataset_id=dataset.id)}}" method="post" enctype="multipart/form-data">
+                        <!-- 选择文件 -->
+                        <div class="mb-4">
+                            <label for="file" class="block text-sm font-medium text-gray-700 mb-2">选择文件</label>
+                            <div class="relative flex flex-col space-y-2 p-6 border border-gray-300 rounded-lg cursor-pointer items-center justify-between bg-gray-100">
+                                <input type="file" id="file" name="file" class="absolute left-0 top-0 opacity-0 w-full h-full cursor-pointer" 
+                                    onchange="document.getElementById('file-name').innerHTML = this.value.split(/(\\|\/)/g).pop();">
+                                <div class="flex items-center">
+                                    <div class="h-full flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 cursor-pointer">
+                                        <i class="fa fa-upload"></i>
+                                        <!-- <span>选择文件</span> -->
+                                    </div>
+                                </div>
+                                <div id="file-name" class="text-center">
+                                    <p class="font-medium my-1">点击此处上传文件</p>
+                                    <p class="text-sm text-gray-600 leading-5">
+                                        支持 .txt, .docx, .csv, .xlsx, .pdf 类型文件 <br/>
+                                        文件大小不超过16MB
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end mt-3 space-x-4">
+                            <a href="{{url_for('dataset.document_list', dataset_id=dataset.id)}}" class="text-sm bg-gray-500 text-white px-4 py-1.5 rounded-lg shadow hover:bg-gray-600">
+                                返回列表
+                            </a>
+                            <button type="submit" class="text-sm bg-blue-500 text-white px-4 py-1.5 rounded-lg shadow hover:bg-blue-600">
+                                上传文档
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+

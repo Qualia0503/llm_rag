@@ -1,0 +1,89 @@
+{% extends "layouts/main.html" %}
+
+{% block header %}
+<title>万店盈利文档列表</title>
+{% endblock %}
+
+{% block content %}
+
+
+<div class="flex-1">
+    <div class="h-full p-4 pl-0">
+        <div class="h-full w-full rounded-lg border border-gray-300 bg-white overflow-auto p-6">
+            
+            <div class="flex justify-between items-center">
+                <div class="flex items-center mb-4 text-blue-500">
+                    <i class="fa fa-book text-2xl mr-2"></i>
+                    <h1 class="text-2xl font-medium">{{dataset.name}}</h1>
+                    <div class="ml-4 bg-gray-200 rounded px-2 py-0.5 text-gray-600 text-sm">文档列表</div>
+                </div>
+                <div class="flex justify-end mb-4">
+                    <a href="{{url_for('dataset.document_create', dataset_id=dataset.id)}}" class="flex items-center bg-blue-500 text-white px-4 py-2 text-sm rounded-lg shadow hover:bg-blue-600">
+                        <i class="fa fa-upload mr-2"></i>
+                        <span>上传文档</span>
+                    </a>
+                </div>
+            </div>
+
+            {% include "widgets/flash_messages.html" %}
+
+            <!-- 文档列表 -->
+            <table class="min-w-full bg-white">
+                <thead>
+                    <tr class="w-full bg-gray-100 text-left text-sm leading-normal text-gray-600">
+                        <th class="py-3 px-6 rounded-l-lg w-20 text-center">序号</th>
+                        <th class="py-3 px-6">名称</th>
+                        <th class="py-3 px-6">上传时间</th>
+                        <th class="py-3 px-6">状态</th>
+                        <th class="py-3 px-6 rounded-r-lg w-28">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 text-sm">
+                    {% for item in documents %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-6 text-center">{{item.id}}</td>
+                        <td class="py-3 px-6">
+                            <a href="{{url_for('dataset.segment_list', document_id = item.id)}}" class="text-blue-500 hover:underline">
+                                {{item.file_name}}
+                            </a>
+                            
+                        </td>
+                        <td class="py-3 px-6">{{item.created_at.strftime('%Y-%m-%d %H:%M')}}</td>
+                        <td class="py-3 px-6">
+                            {% set status_text, status_class = item.status | document_status %}
+                            <span class="py-1 px-3 rounded-full text-xs {{ status_class }}">{{ status_text }}</span>
+                            
+                        </td>
+                        <td class="py-3 px-6">
+                            <a href="#" data-url="{{url_for('dataset.document_delete', document_id=item.id)}}" onclick="confirmDeletion(event)" class="bg-red-500 text-white px-3 py-1 text-sm rounded shadow hover:bg-red-600">删除</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+
+                </tbody>
+            </table>
+            
+            <div class="mt-6">
+                {% include 'widgets/pagination.html' %}
+
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block footer %}
+<script>
+    function confirmDeletion(event) {
+        const url = event.target.getAttribute('data-url');
+        if (!confirm('确定要删除这个知识库吗？')) {
+            event.preventDefault();
+        } else {
+            window.location.href = url;
+        }
+    }
+</script>
+{% endblock %}

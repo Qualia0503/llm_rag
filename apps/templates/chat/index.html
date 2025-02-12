@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大模型LLM-RAG对话项目</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+    <script src="https://cdn.bootcdn.net/ajax/libs/alpinejs/3.14.1/cdn.min.js" defer></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/marked/13.0.2/marked.min.js"></script>
+    <link rel="icon" type="image/png" href="{{url_for('static', filename='favicon_64.ico')}}">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen" x-data="app()">
+        <!-- 左侧选择区域 -->
+        <div class="w-1/4 bg-white p-6 flex flex-col justify-between shadow-md">
+            <div>
+                <h1 class="text-2xl font-semibold text-blue-600">大模型LLM-RAG对话项目</h1>
+
+                <!-- 模型选择 -->
+                <div class="mt-4">
+                    <label for="model-select" class="block mb-2 text-gray-800 font-medium">选择对话模型：</label>
+                    <select id="model-select" x-model="params.model_name" class="w-full px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <template x-for="model_name in llmModels" :key="model_name">
+                            <option :value="model_name" :selected="model_name==params.model_name" x-text="model_name"></option>
+                        </template>
+                    </select>
+                </div>
+
+
+                <!-- 知识库选择 -->
+                <div class="mt-6">
+                    <div class="text-gray-800 mb-2 font-medium">选择知识库：</div>
+                    <div class="flex flex-col space-y-2 overflow-y-auto h-28 p-3 border border-gray-300 rounded">
+                        <div class="grid grid-cols-2 gap-2">
+                            <template x-for="dataset in datasets" :key="dataset.id">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" :value="dataset.id" x-model="params.dataset_ids" class="form-checkbox h-4 w-4 text-blue-600">
+                                    <span class="text-gray-800" x-text="dataset.name"></span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 历史对话管理 -->
+                <div class="mt-6">
+                    <div class="flex justify-between items-center">
+                        <div class="text-gray-800 font-medium">历史对话：</div>
+                        <button @click="createConversation()" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">新建对话</button>
+                    </div>
+                    <div class="flex flex-col space-y-3 overflow-y-auto h-80" id="conversation-list">
+                        <template x-for="conversation in conversations" key="conversation.uid">
+                            <div @click="activeConversation(conversation.uid)" class="flex items-center justify-between border px-3 py-1.5 rounded"
+                            :class="currentConversation.uid == conversation.uid ? 'border-blue-400 bg-gray-100 text-blue-500' : ''">
+                        
+                                <template x-if="conversationEditStatus && currentConversation.uid == conversation.uid">
+                                    <input type="text" x-model="currentConversation.name" class="px-1 py-0.5 text-sm" @click="event.stopPropagation()">
+                                </template>
+                                <template x-if="!conversationEditStatus || currentConversation.uid != conversation.uid">
+                                    <span x-text="conversation.name"></span>
+                                </template>
+
+                                <template x-if="currentConversation.uid == conversation.uid">
+                                    <div class="space-x-2 flex items-center">
+                                        <template x-if="conversationEditStatus">
+                                            <button @click="saveConversation(); event.stopPropagation()" class="text-blue-500 hover:text-blue-700">
+                                                <i class="fa fa-save"></i>
+                                            </button>
+                                        </template>
+                                        <template x-if="!conversationEditStatus">
+                                            <button @click="editConversation(); event.stopPropagation()" class="text-blue-500 hover:text-blue-700">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                        </template>
+                                        <button @click="deleteConversation(); event.stopPropagation()" class="text-blue-500 hover:text-blue-700">
+                                            <i class="fa fa-trash-o"></i>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+            </div>
+            <!-- 版权信息 -->
+            <div class="text-sm text-gray-500 mt-6">
+                &copy; 2025 <a href="http://www.ichenhua.cn" class="text-blue-500 hover:underline">ZACK_AI</a>. 保留所有权利.
+            </div>
+        </div>
+
+        <!-- 右侧聊天区域 -->
+        <div class="flex-1 flex flex-col p-6 space-y-4">
+            <!-- 对话框 -->
+            <div class="flex-1 flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="flex-1 p-6 space-y-4 overflow-y-auto" id="chat-window">
+                    <!-- 聊天消息 -->
+                    <div>
+                        <div class="text-sm text-gray-500">系统消息：欢迎使用ZACK_AI LLM-RAG对话系统，您可以基于左侧知识库和我对话！</div>
+                    </div>
+                    <template x-for="(message, index) in messages" :key="index">
+                        <!-- 动态聊天消息将插入此处 -->
+                        <div>
+                            <template x-if="message.role === 'user'">
+                                <div class="flex bg-blue-100 px-4 py-2 rounded-lg">
+                                    <span class="w-16 text-right font-medium flex-shrink-0">用户：</span>
+                                    <span class="flex-1" x-text = "message.content"></span>
+                                </div>
+                            </template>
+                            <template x-if="message.role === 'assistant'">
+                                <div class="flex bg-gray-100 px-4 py-2 rounded-lg">
+                                    <span class="w-16 text-right font-medium flex-shrink-0">大模型：</span>
+                                    <span class="flex-1" x-html="convertMarkdown(message.content)"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                <!-- 输入框 -->
+                <div class="p-4 border-t border-gray-300 bg-white">
+                    <div class="flex space-x-4">
+                        <input @keydown.enter="sendMessage" type="text" id="chat-input" x-model="chatInput" class="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="输入消息...">
+                        <button @click="sendMessage" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">发送</button>
+                        <button @click="abortCurrentRequest()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function sendRequest(url, method, data, to_json=true) {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            if (to_json) {
+                return await response.json();
+            } else {
+                return await response;
+            };
+        }
+
+        function generateUniqueId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+        }
+
+        function app(){
+            llmModels = JSON.parse('{{ llm_models | tojson }}')
+            return {
+                llmModels: llmModels,
+                datasets: JSON.parse('{{ datasets | tojson }}'),
+                conversations: JSON.parse('{{ conversations | tojson }}'),
+                // 1、定义激活函数
+                currentConversation: {
+                    uid: null,
+                    name: null
+                },
+                params: {
+                    model_name: llmModels[0],
+                    dataset_ids: []
+                },
+                chatInput:'',
+                messages: [],
+                abortRequest: false,
+                
+                // # 定义编辑状态
+                conversationEditStatus: false,
+                editConversation: function() {
+                    this.conversationEditStatus = true
+                },
+
+                abortCurrentRequest: function() {
+                this.abortRequest = true
+                },                           
+                // ##############################################
+
+                sendMessage: async function() {
+                // 内容为空时拦截
+                if (!this.chatInput.trim()) {
+                    return;
+                }
+                // 显示用户问题并清空输入框
+                this.messages.push({role: 'user', content: this.chatInput});
+                this.chatInput = '';
+
+                try {
+                    const obj = {
+                        messages: this.messages,
+                        params: this.params
+                    }
+                    const response = await sendRequest('/chat/completions', 'POST', obj, false)
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+
+                    let chunk;
+                    let text = '';
+                    
+                    // 计算对话轮数，最后一个值就是大模型的回复
+                    let modelMessageIndex = this.messages.length;
+                    this.messages.push({role: 'assistant', content: ''}); // 添加占位
+
+                    while (true) {
+                        chunk = await reader.read();
+                        // 数据传输完成
+                        if (chunk.done || this.abortRequest) {
+                            this.saveConversationMessages()
+                            break;
+                        }
+                        // 解码后端流式数据
+                        buffer = decoder.decode(chunk.value, { stream: true });
+                        let lines = buffer.split('\n')
+                        for (let i = 0; i < lines.length - 1; i++) {
+                            const line = lines[i].trim();
+                            if (line.startsWith('data:')) {
+                                // 解析并追加数据
+                                const jsonString = line.substring(5).trim();
+                                parseData = JSON.parse(jsonString)
+                                text += parseData.data.content
+                                // 更新界面内容
+                                this.messages[modelMessageIndex].content = text;
+                            }
+                        }
+                    }
+                    // # 注意循环结束后要还原，不然无法发起下一次请求
+                    this.abortRequest = false;
+                } catch (error) {
+                    console.error('Fetch error: ', error);
+                }
+            },
+
+            createConversation: async function() {
+                try {
+                    const newConversationName = `新对话 ${this.conversations.length + 1}`;
+                    const obj = {
+                        uid: generateUniqueId(),
+                        name: newConversationName
+                    };
+                    const response = await sendRequest('/chat/conversation_create', 'POST', obj);
+                    if(response && response.status == 200){
+                        this.conversations.unshift(obj)
+                        this.activeConversation();
+                    } else {
+                        throw new Error(response.message);
+                    }
+                } catch (error) {
+                    alert('Error creating conversation:' + error);
+                }
+            },
+
+            activeConversation: async function(uid=null){
+                if(!uid){
+                    // 没有历史对话时，创建一个空的
+                    if(this.conversations.length == 0){
+                        await this.createConversation()
+                    }
+                    this.currentConversation = this.conversations[0]
+                } else {
+                    const conversation = this.conversations.find(conv => conv.uid === uid);
+                    this.currentConversation = conversation
+                }
+                this.conversationEditStatus = false
+                this.getConversationMessages()
+            },
+
+            deleteConversation: async function() {
+                // 首先确认用户是否真的想删除会话
+                const confirmation = window.confirm("您确定要删除这个会话及聊天内容吗？");
+                if (!confirmation) {
+                    return; // 如果用户取消了，直接返回
+                }
+                try {
+                    const obj = {
+                        uid: this.currentConversation.uid,
+                    }
+                    const response = await sendRequest('/chat/conversation_delete', 'POST', obj);
+                    if(response && response.status == 200){
+                        this.conversations = this.conversations.filter(convo => convo.uid !== this.currentConversation.uid);
+                        this.activeConversation()
+                    } else {
+                        throw new Error(response.message);
+                    }
+                } catch (error) {
+                    alert('Error creating conversation:' + error);
+                }
+            },
+
+            saveConversation: async function() {
+                try {
+                    const obj = {
+                        uid: this.currentConversation.uid,
+                        name: this.currentConversation.name,
+                    }
+                    const response = await sendRequest('/chat/conversation_edit', 'POST', obj);
+                    if(response && response.status == 200){
+                        this.conversationEditStatus = false
+                    } else {
+                        throw new Error(response.message);
+                    }
+                } catch (error) {
+                    alert('Error creating conversation:' + error);
+                }
+            },
+            saveConversationMessages: async function(){
+                try {
+                    let obj = {
+                        uid: this.currentConversation.uid,
+                        messages: this.messages
+                    }
+                    const response = await sendRequest('/chat/save_conversation_messages', 'POST', obj);
+                    if(response && response.status == 200){
+                        // 成功
+                    } else {
+                        throw new Error(response.message);
+                    }
+                } catch (error) {
+                    alert('Error creating conversation:' + error);
+                }
+            },
+
+            getConversationMessages: async function(){
+                try {
+                    let obj = {
+                        uid: this.currentConversation.uid
+                    }
+                    const response = await sendRequest('/chat/get_conversation_messages', 'POST', obj);
+                    if(response && response.status == 200){
+                        this.messages = response.data.messages
+                    } else {
+                        throw new Error(response.message);
+                    }
+                } catch (error) {
+                    alert('Error creating conversation:' + error);
+                }
+            },
+            //##############################################
+            convertMarkdown: function(content) {
+                return marked.parse(content);
+            },
+
+            updateChatWindow: function() {
+                const chatWindow = document.getElementById('chat-window');
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            },
+            init: function(){
+                this.$watch('messages', (value) => {
+                    this.updateChatWindow();
+                });
+                this.$nextTick(() => {
+                    this.updateChatWindow();
+                });
+                this.activeConversation();
+            }
+            }
+        }
+    </script>
+
+</body>
+</html>

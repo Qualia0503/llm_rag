@@ -1,0 +1,16 @@
+<!-- 显示 Flash 消息 -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="px-4 py-2 text-sm rounded relative mb-4 
+                {% if category == 'success' %}
+                    bg-green-100 border border-green-400 text-green-700
+                {% elif category == 'error' %}
+                    bg-red-100 border border-red-400 text-red-700
+                {% endif %}
+            ">
+                <span class="block sm:inline">{{ message }}</span>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}

@@ -1,0 +1,79 @@
+{% extends "layouts/main.html" %}
+
+{% block header %}
+<title>万店盈利知识库</title>
+{% endblock %}
+
+{% block content %}
+
+<div class="flex-1">
+    <div class="h-full p-4 pl-0">
+        <div class="h-full w-full rounded-lg border border-gray-300 bg-white overflow-auto p-6">
+            
+            <div class="flex justify-between items-center">
+                <div class="flex items-center mb-4 text-blue-500">
+                    <i class="fa fa-book text-2xl mr-2"></i>
+                    <h1 class="text-2xl font-medium">我的知识库</h1>
+                </div>
+                <div class="flex justify-end mb-4">
+                    <a href="{{url_for('dataset.dataset_create')}}" class="flex items-center bg-blue-500 text-white px-4 py-2 text-sm rounded-lg shadow hover:bg-blue-600">
+                        <i class="fa fa-plus mr-2"></i>
+                        <span>新建</span>
+                    </a>
+                </div>
+            </div>
+
+            {% if not datasets %}
+            <div class="border rounded-lg p-6">
+                还没有知识库，快去创建一个吧！
+            </div>
+            {% endif %}
+
+            {% include "widgets/flash_messages.html" %}
+
+            <div class="grid grid-cols-3 gap-6">
+                {% for item in datasets %}
+                <!-- 知识库单元 -->
+                <div class="border rounded-lg p-4 flex flex-col justify-between hover:border-blue-500">
+                    <a href="{{url_for('dataset.document_list', dataset_id=item.id)}}">
+                        <div class="flex items-center mb-2">
+                            <i class="fa fa-file text-gray-500 text-xl mr-2"></i>
+                            <h2 class="text-lg font-medium">{{item.name}}</h2>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">
+                            {{item.desc}}
+                        </p>
+                    </a>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">{{item.document_count}} 个文档</span>
+                        <div class="space-x-1">
+                            <a href="{{url_for('dataset.dataset_edit', dataset_id=item.id)}}" class="bg-green-500 text-white px-3 py-1 text-sm rounded shadow hover:bg-green-600">编辑</a>
+                            <a href="#" data-url="{{url_for('dataset.dataset_delete', dataset_id=item.id)}}" onclick="confirmDeletion(event)" class="bg-red-500 text-white px-3 py-1 text-sm rounded shadow hover:bg-red-600">删除</a>
+                            
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block footer %}
+<script>
+    function confirmDeletion(event) {
+        const url = event.target.getAttribute('data-url');
+        if (!confirm('确定要删除这个知识库吗？')) {
+            event.preventDefault();
+        } else {
+            window.location.href = url;
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+
+
+
+<nav class="flex gap-2">
+    {% if pagination.has_prev %}
+        <a href="{{ url_for('dataset.document_list', dataset_id=dataset.id, page=1) }}" class="px-3 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">首页</a>
+        <a href="{{ url_for('dataset.document_list', dataset_id=dataset.id, page=pagination.prev_num) }}" class="px-3 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">上一页</a>
+    {% else %}
+        <span class="px-3 py-1 bg-gray-200 text-gray-500 rounded cursor-not-allowed">首页</span>
+        <span class="px-3 py-1 bg-gray-200 text-gray-500 rounded cursor-not-allowed">上一页</span>
+    {% endif %}
+
+    {% for page_num in range(1, pagination.pages + 1) %}
+        {% if page_num == pagination.page %}
+            <span class="px-3 py-1 bg-blue-500 text-white rounded">{{ page_num }}</span>
+        {% elif page_num == 1 or page_num == pagination.pages or (page_num >= pagination.page - 2 and page_num <= pagination.page + 2) %}
+            <a href="{{ url_for('dataset.document_list', dataset_id=dataset.id, page=page_num) }}" class="px-3 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">{{ page_num }}</a>
+        {% elif page_num == pagination.page - 3 or page_num == pagination.page + 3 %}
+            <span class="px-3 py-1 text-gray-500">...</span>
+        {% endif %}
+    {% endfor %}
+
+    {% if pagination.has_next %}
+        <a href="{{ url_for('dataset.document_list', dataset_id=dataset.id, page=pagination.next_num) }}" class="px-3 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">下一页</a>
+        <a href="{{ url_for('dataset.document_list', dataset_id=dataset.id, page=pagination.pages) }}" class="px-3 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">尾页</a>
+    {% else %}
+        <span class="px-3 py-1 bg-gray-200 text-gray-500 rounded cursor-not-allowed">下一页</span>
+        <span class="px-3 py-1 bg-gray-200 text-gray-500 rounded cursor-not-allowed">尾页</span>
+    {% endif %}
+</nav>

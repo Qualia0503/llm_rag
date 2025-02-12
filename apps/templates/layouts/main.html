@@ -1,0 +1,48 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block header %}{% endblock %}
+    <link rel="stylesheet" href="{{url_for('static', filename='app.css')}}">
+    <link rel="icon" type="image/png" href="{{url_for('static', filename='favicon_64.ico')}}">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+</head>
+<body class="h-screen">
+    <div class="flex h-full bg-gray-100">
+        <div class="w-[75px] px-2 py-8 flex flex-col items-center text-gray-600">
+            <!-- 用户头像 -->
+            <a href="{{url_for('index')}}" class="mb-6">
+                <img src="{{ url_for('static', filename='avatar.png') }}" alt="User Avatar" class="rounded-full w-12 h-12">
+            </a>
+            <!-- 知识库（选中状态） -->
+            <a href="{{url_for('dataset.dataset_list')}}" class="mb-6 flex flex-col items-center w-full py-2 rounded-lg shadow text-blue-500 bg-white">
+                <i class="fa fa-book mb-1"></i>
+                <span class="text-sm">知识库</span>
+            </a>
+            <!-- 设置
+            <a href="" class="flex flex-col items-center w-full py-2">
+                <i class="fa fa-cog mb-1"></i>
+                <span class="text-sm">设置</span>
+            </a> -->
+            <!-- 退出登录 -->
+            <a href="{{url_for('auth.logout')}}" class="flex flex-col items-center w-full mt-auto">
+                <i class="fa fa-sign-out mb-1"></i>
+                <span class="text-sm">退出</span>
+            </a>
+        </div>
+        
+
+        {% block content %}{% endblock %}
+
+    
+    
+    </div>
+
+    {% block footer %}{% endblock %}
+
+</body>
+</html>
